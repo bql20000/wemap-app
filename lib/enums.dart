@@ -1,5 +1,5 @@
 // WEMAP
-String weMapApiKey = 'GqfwrZUEfxbwbnQUhtBMFivEysYIxelQ';
+const String weMapApiKey = 'GqfwrZUEfxbwbnQUhtBMFivEysYIxelQ';
 
 // COLORS
 class AppColors {
