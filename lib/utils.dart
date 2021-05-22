@@ -9,3 +9,7 @@ Future<LatLng> getCurrentPos() async {
   );
   return LatLng(position.latitude, position.longitude);
 }
+
+Map calculateSummaryInfo(List<LatLng> coordinates, DateTime startTime) {
+  return {};
+}

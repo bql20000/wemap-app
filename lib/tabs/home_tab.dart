@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:wemap_test_app/enums.dart';
 import 'package:wemap_test_app/utils.dart';
 import 'package:wemapgl/wemapgl.dart';
+
+import '../global_variables.dart';
 
 class HomeTab extends StatefulWidget {
   @override
@@ -10,7 +13,8 @@ class HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<HomeTab> {
   WeMapController mapController;
-  LatLng lastPos;
+
+  DateTime startTime;
   LatLng currentPos;
 
   List<LatLng> coordinates = [];
@@ -22,37 +26,60 @@ class _HomeTabState extends State<HomeTab> {
   void _onMapCreated(WeMapController controller) async {
     mapController = controller;
 
-    mapController.addCircle(
-      CircleOptions(
-        geometry: currentPos,
-        circleColor: AppColors.currentPos,
-      )
+    Position pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.bestForNavigation
     );
+    updateLocation(pos);
 
     // todo: move below code to startJourney
     currentLine = await mapController.addLine(LineOptions(
       geometry: coordinates,
       lineColor: AppColors.basicLine,
+      lineWidth: 8,
     ));
   }
 
+  void updateLocation(Position position) {
+    currentPos = LatLng(position.latitude, position.longitude);
+    print('### ${currentPos.latitude} ${currentPos.longitude}');
+    mapController.animateCamera(CameraUpdate.newLatLng(currentPos));
+  }
+
   void updatePath() {
-    // Update line each (fixed) duration of time.
+    // Update line each (fixed) duration of time
     coordinates.add(currentPos);
     mapController.updateLine(currentLine, LineOptions(
       geometry: coordinates
     ));
   }
 
+  void setupLocationStream() {
+    positionStream = Geolocator.getPositionStream(
+      intervalDuration: LocationUpdateOptions.intervalDuration,
+      distanceFilter: LocationUpdateOptions.minDistance
+    ).listen((Position position) {
+      updateLocation(position);
+      if (onJourney) updatePath();
+    });
+  }
+
   void startJourney() {
-    // reset variables
-    // some mechanism to update the path/line consecutively
+    coordinates.clear();
+    updatePath();
+    startTime = DateTime.now();
+    setupLocationStream();
+    mapController.animateCamera(CameraUpdate.newLatLngZoom(currentPos, 16));
   }
 
   void endJourney() {
-    // reset variables
-    // show a screen to summarize journey
-    // save journey information to account tab
+    // todo: calculate summary information (Quan)
+    Map summaryInfo = calculateSummaryInfo(coordinates, startTime);
+
+    // todo: navigate to summary screen (pass summary_info as a parameter) (Thin)
+
+    // move camera to larger
+    LatLng centerPos = summaryInfo['centerPos'] ?? initialPosition;
+    mapController.animateCamera(CameraUpdate.newLatLngZoom(centerPos, 14));
   }
 
   @override
@@ -66,6 +93,7 @@ class _HomeTabState extends State<HomeTab> {
               zoom: 16.0,
             ),
             onMapCreated: _onMapCreated,
+            myLocationEnabled: true,            // this currently not working
           ),
           Positioned(
             bottom: 50,
@@ -75,19 +103,17 @@ class _HomeTabState extends State<HomeTab> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
-                  child: Text(buttonTitle),
+                  child: Text(onJourney ? 'End journey' : 'Start journey'),
                   onPressed: () {
                     if (!onJourney) {
                       startJourney();
                       setState(() {
-                        buttonTitle = 'Start journey';
                         onJourney = true;
                       });
                     }
                     else {
                       endJourney();
                       setState(() {
-                        buttonTitle = 'End journey';
                         onJourney = false;
                       });
                     }
@@ -100,6 +126,4 @@ class _HomeTabState extends State<HomeTab> {
       )
     );
   }
-
-
 }
