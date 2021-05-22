@@ -1,6 +1,11 @@
+import 'package:geolocator/geolocator.dart';
 import 'package:wemapgl/wemapgl.dart';
 
-LatLng getCurrentPosition() {
+Future<LatLng> getCurrentPos() async {
   // todo: implement
-  return LatLng(21.038282, 105.782885);
+  Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.bestForNavigation,
+      forceAndroidLocationManager: true
+  );
+  return LatLng(position.latitude, position.longitude);
 }

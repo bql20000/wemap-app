@@ -21,6 +21,7 @@ environment:
   sdk: ">=2.7.0 <3.0.0"
 
 dependencies:
+  geolocator: ^6.2.1
   wemapgl:
     path: ./WeMap-Flutter-SDK-master
   flutter:

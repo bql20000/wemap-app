@@ -11,7 +11,7 @@ class HomeTab extends StatefulWidget {
 class _HomeTabState extends State<HomeTab> {
   WeMapController mapController;
   LatLng lastPos;
-  LatLng currentPos = getCurrentPosition();
+  LatLng currentPos;
 
   List<LatLng> coordinates = [];
   Line currentLine;
@@ -30,7 +30,6 @@ class _HomeTabState extends State<HomeTab> {
     );
 
     // todo: move below code to startJourney
-    coordinates.add(currentPos);
     currentLine = await mapController.addLine(LineOptions(
       geometry: coordinates,
       lineColor: AppColors.basicLine,
@@ -39,7 +38,7 @@ class _HomeTabState extends State<HomeTab> {
 
   void updatePath() {
     // Update line each (fixed) duration of time.
-    coordinates.add(getCurrentPosition());
+    coordinates.add(currentPos);
     mapController.updateLine(currentLine, LineOptions(
       geometry: coordinates
     ));
@@ -63,7 +62,7 @@ class _HomeTabState extends State<HomeTab> {
         children: [
           WeMap(
             initialCameraPosition: CameraPosition(
-              target: currentPos,
+              target: initialPosition,
               zoom: 16.0,
             ),
             onMapCreated: _onMapCreated,
