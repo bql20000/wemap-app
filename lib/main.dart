@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wemap_test_app/screens/main_page.dart';
+import 'package:wemap_test_app/screens/summary.dart';
 
 import 'package:wemapgl/wemapgl.dart' as WEMAP;
 
@@ -17,6 +18,7 @@ class _MyAppState extends State<MyApp> {
       initialRoute: '/main-page',
       routes: {
         MainPage.id: (context) => MainPage(),
+        Summary.id: (context) => Summary(),
       }
     );
   }
