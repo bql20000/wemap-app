@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:wemap_test_app/enums.dart';
+import 'package:wemap_test_app/models/result.dart';
 import 'package:wemap_test_app/utils.dart';
 import 'package:wemapgl/wemapgl.dart';
 
@@ -26,14 +27,10 @@ class _HomeTabState extends State<HomeTab> {
   void _onMapCreated(WeMapController controller) async {
     mapController = controller;
 
-    Position pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.bestForNavigation
-    );
-    updateLocation(pos);
+    updateLocation(await getCurrentPos());
 
-    // todo: move below code to startJourney
     currentLine = await mapController.addLine(LineOptions(
-      geometry: coordinates,
+      geometry: [],
       lineColor: AppColors.basicLine,
       lineWidth: 8,
     ));
@@ -41,12 +38,13 @@ class _HomeTabState extends State<HomeTab> {
 
   void updateLocation(Position position) {
     currentPos = LatLng(position.latitude, position.longitude);
-    print('### ${currentPos.latitude} ${currentPos.longitude}');
+    // print('### ${currentPos.latitude} ${currentPos.longitude}');
     mapController.animateCamera(CameraUpdate.newLatLng(currentPos));
   }
 
   void updatePath() {
     // Update line each (fixed) duration of time
+    print('@@@ ${coordinates.length}');
     coordinates.add(currentPos);
     mapController.updateLine(currentLine, LineOptions(
       geometry: coordinates
@@ -63,22 +61,33 @@ class _HomeTabState extends State<HomeTab> {
     });
   }
 
-  void startJourney() {
+  Future<void> resetLine() async {
     coordinates.clear();
+    updateLocation(await getCurrentPos());
     updatePath();
+  }
+
+  void startJourney() async {
+    await resetLine();
     startTime = DateTime.now();
     setupLocationStream();
     mapController.animateCamera(CameraUpdate.newLatLngZoom(currentPos, 16));
   }
 
   void endJourney() {
-    // todo: calculate summary information (Quan)
+    // calculate summary information
     Map summaryInfo = calculateSummaryInfo(coordinates, startTime);
 
-    // todo: navigate to summary screen (pass summary_info as a parameter) (Thin)
+    Result result = Result(
+      totalTime: summaryInfo['totalTime'],
+      totalDistance: summaryInfo['totalDistance']
+    );
+
+    // navigate to summary screen
+    Navigator.pushNamed(context, '/summary', arguments: result);
 
     // move camera to larger
-    LatLng centerPos = summaryInfo['centerPos'] ?? initialPosition;
+    LatLng centerPos = summaryInfo['centerPos']; // ?? coordinates.last;
     mapController.animateCamera(CameraUpdate.newLatLngZoom(centerPos, 14));
   }
 
@@ -103,7 +112,16 @@ class _HomeTabState extends State<HomeTab> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
-                  child: Text(onJourney ? 'End journey' : 'Start journey'),
+                  child: Text(onJourney ? 'END JOURNEY' : 'START NEW JOURNEY'),
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.orangeAccent,
+                    textStyle: TextStyle(
+                      fontFamily: 'Oswald',
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   onPressed: () {
                     if (!onJourney) {
                       startJourney();
