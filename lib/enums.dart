@@ -1,7 +1,7 @@
 import 'package:wemapgl/wemapgl.dart';
 
 // WEMAP
-const String weMapApiKey = 'GqfwrZUEfxbwbnQUhtBMFivEysYIxelQ';
+const String weMapApiKey = '';
 
 // GENERAL
 const LatLng initialPosition = LatLng(21.038282, 105.782885);    // VNU
